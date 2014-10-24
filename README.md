@@ -38,6 +38,27 @@ user=app
 stopsignal=INT
 ```
 
+## Contributing
+
+Contributions welcome - note that I plan to significantly change the API, see branch feature/context-api
+
+### Setup
+
+```#!bash
+git clone https://github.com/alexhayes/supervisor-confator.git
+cd supervisor-confator
+git submodule init
+git submodule update
+mkvirtualenv supervisor-confator
+pip install -r requirements
+```
+
+### Running Tests
+
+```#!python
+nosetests
+```
+
 ## Thanks
 
 Special thanks to http://roi.com.au for supporting this project.

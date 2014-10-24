@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-class SupervisorConfCreator(object):
+class SupervisorConfator(object):
     
     def __init__(self, programs, groups=None):
         self.programs = programs
