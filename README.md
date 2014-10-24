@@ -15,27 +15,48 @@ Currently Supervisor Confator only supports program and group sections.
 ## Example
 
 ```#!python
-import sys
-from collections import OrderedDict
+sc = SupervisorConfator(default_program_options=dict(user='myuser'),
+                        command_formats=dict(bin='/usr/bin/',
+                                             log_dir='/var/log/'))
 
-formats = dict(python=sys.executable)
+sc.program('eggs', '{bin}eggs')
 
-programs = OrderedDict()
-programs['myapp'] = OrderedDict(
-    command='{python} /path/to/my/app.py'.format(**formats),
-    user='app',
-    stopsignal='INT'
-)
-print SupervisorConfCreator(programs).generate()
+with sc.options(autorestart=False):
+	sc.program('sausage', '{bin}sausage --log-dir={log_dir}sausage.log')
+
+with sc.group('mygroup', priority=999):
+	with sc.options(priority=998):
+		sc.program('silly', '{bin}silly')
+		sc.program('walks', '{bin}walks', user='myotheruser', stopsignal='INT')
+    
+sc.write()
 ```
 
 Outputs the following;
 
 ```#!ini
-[program:myapp]
-command=/usr/bin/python /path/to/my/app.py
-user=app
+[program:eggs]
+command=/usr/bin/eggs
+user=myuser
+
+[program:sausage]
+command=/usr/bin/sausage
+user=myuser
+autorestart=false
+
+[program:silly]
+command=/usr/bin/walks
+priority=998
+
+[program:walks]
+command=/usr/bin/walks
+user=myotheruser
 stopsignal=INT
+priority=998
+
+[group:mygroup]
+programs=silly,walks
+priority=999
 ```
 
 ## Thanks
