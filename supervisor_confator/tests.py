@@ -1,13 +1,13 @@
 from unittest.case import TestCase
 from collections import OrderedDict
-from supervisor_confator import SupervisorConfCreator
+from supervisor_confator import SupervisorConfator
 
 class SupervisorConfCreatorTestCase(TestCase):
     
     def get_programs(self):
         programs = OrderedDict()
-        programs['crm.uwsgi'] = OrderedDict(
-            command='/usr/local/bin/uwsgi --ini /data/vhosts/hosts/myapp.com/scripts/uwsgi.ini',
+        programs['web'] = OrderedDict(
+            command='/usr/local/bin/uwsgi --ini /path/to/uwsgi.ini',
             user='deploy',
             stopsignal='INT'
         )
@@ -41,11 +41,16 @@ class SupervisorConfCreatorTestCase(TestCase):
         
         return programs
 
+    def get_groups(self):
+        groups = OrderedDict()
+        groups['myappgroup'] = dict(programs=['web', 'flower'], priority=999)
+        return groups
+
     def test_programs(self):
         programs = self.get_programs()
         
-        expected = """[program:crm.uwsgi]
-command=/usr/local/bin/uwsgi --ini /data/vhosts/hosts/myapp.com/scripts/uwsgi.ini
+        expected = """[program:web]
+command=/usr/local/bin/uwsgi --ini /path/to/uwsgi.ini
 user=deploy
 stopsignal=INT
 
@@ -76,5 +81,13 @@ stdout_logfile_maxbytes=50MB
 stopsignal=TERM
 stopwaitsecs=10
 """
-        actual = SupervisorConfCreator(programs).generate()
+        actual = SupervisorConfator(programs).generate()
         self.assertEqual(expected, actual)
+
+    def test_groups(self):
+        groups = self.get_groups()
+        
+        expected = """[group:myappgroup]
+programs=web,flower
+priority=999
+        """        
