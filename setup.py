@@ -1,18 +1,17 @@
 from codecs import open
-from os import path
 import os
 
 from setuptools import setup, find_packages
 
 
-ROOT = path.abspath(path.dirname(__file__))
+ROOT = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(ROOT, 'VERSION'), encoding='utf-8') as f:
+with open(os.path.join(ROOT, 'VERSION')) as f:
     VERSION = f.read().strip()
 
 setup(
-    name = 'supervisor-confator',
-    packages = ['supervisor_confator'],
+    name='supervisor-confator',
+    packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     license='MIT',
     version = VERSION,
     description = 'Python interface to generate supervisor configuration files.',
@@ -41,4 +40,5 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2.7',
     ],
+      
 )
