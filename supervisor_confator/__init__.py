@@ -1,16 +1,45 @@
 from collections import OrderedDict
+from contextlib import contextmanager
 
 class SupervisorConfator(object):
     
-    def __init__(self, programs, groups=None):
-        self.programs = programs
-        self.groups = groups
+    def __init__(self, program_options={}, command_formats={}):
+        self.programs = OrderedDict()
+        self.groups = OrderedDict()
+        self.program_options = program_options
+        self.command_formats = command_formats
+        self.context_options = dict()
+        self.context_group_programs = []
     
-    def generate(self):
+    @contextmanager
+    def options(self, **kwargs):
+        self.context_options = kwargs
+        yield
+        self.context_options = {}
+    
+    @contextmanager
+    def group(self, group_name, **kwargs):
+        self.context_group_programs = []
+        yield
+        self.groups[group_name] = dict(programs=self.context_group_programs, **kwargs)
+    
+    def program(self, program_name, command, **kwargs):
+        options = dict(**self.program_options)
+        options.update(**self.context_options)
+        options.update(**kwargs)
+        options.update(command=command.format(**self.command_formats))
+        
+        self.programs[program_name] = dict(**options)
+        
+        self.context_group_programs.append(program_name)
+    
+    def write(self):
         """
         Generate the output.
         """
         conf = []
+        
+        # First off write the programs
         initial_option_keys = ['command', 'user', 'process_name']
         
         for program,options in self.programs.items():
@@ -18,7 +47,7 @@ class SupervisorConfator(object):
             
             for key in initial_option_keys:
                 try:
-                    conf.append('%s=%s' % (key, options.pop(key)))
+                    conf.append('%s=%s' % (key, self.to_supervisor(options.pop(key))))
                 except KeyError: pass
             
             # Put the rest of the options in alpha order            
@@ -27,6 +56,17 @@ class SupervisorConfator(object):
         
             conf.append('')
         
+        # Now write the groups
+        for group,options in self.groups.items():
+            conf.append('[group:%s]' % group)
+            conf.append('programs=%s' % self.to_supervisor(options.pop('programs')))
+            
+            # Put the rest of the options in alpha order            
+            for option,value in self.sort_options(options).items():
+                conf.append('%s=%s' % (option, self.to_supervisor(value)))
+        
+            conf.append('')
+            
         return "\n".join(conf)
 
     def sort_options(self, options):
