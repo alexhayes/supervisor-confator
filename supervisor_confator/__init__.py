@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from contextlib import contextmanager
 
+class ProgramExistsError(Exception): pass
+
 class SupervisorConfator(object):
     
     def __init__(self, program_options={}, command_formats={}):
@@ -23,14 +25,25 @@ class SupervisorConfator(object):
         yield
         self.groups[group_name] = dict(programs=self.context_group_programs, **kwargs)
     
-    def program(self, program_name, command, **kwargs):
+    def program(self, program_name, command, extra_command_formats={}, **kwargs):
+        
+        if program_name in self.programs:
+            raise ProgramExistsError("Program '%s' already exists." % program_name)
+
+        # Create the program options
         options = dict(**self.program_options)
         options.update(**self.context_options)
         options.update(**kwargs)
-        options.update(command=command.format(**self.command_formats))
         
+        # Format the command
+        command_formats = dict(**self.command_formats)
+        command_formats.update(**extra_command_formats)
+        options.update(command=command.format(**command_formats))
+
+        # Add the program        
         self.programs[program_name] = dict(**options)
         
+        # Append it to the current group
         self.context_group_programs.append(program_name)
     
     def write(self):

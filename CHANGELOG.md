@@ -1,3 +1,8 @@
+# Release 0.3.0 - Mon Oct 27 08:45:28 EST 2014
+
+- Added extra_command_formats to 'program' definition.
+- Now raises ProgramExistsError
+
 # Release 0.2.1 - Fri Oct 24 15:57:49 EST 2014
 
 - Fixed inclusion of version file in distribution
