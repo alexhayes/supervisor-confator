@@ -1,6 +1,6 @@
 from unittest.case import TestCase
 from collections import OrderedDict
-from supervisor_confator import SupervisorConfator
+from supervisor_confator import SupervisorConfator, ProgramExistsError
 
 class SupervisorConfCreatorTestCase(TestCase):
     
@@ -12,6 +12,11 @@ class SupervisorConfCreatorTestCase(TestCase):
 command=/usr/bin/eggs
 """
         self.assertEqual(expected, actual)
+    
+    def test_program_exists(self):
+        sc = SupervisorConfator()
+        sc.program('eggs', '/usr/bin/eggs')
+        self.assertRaises(ProgramExistsError, sc.program, 'eggs', '/usr/bin/eggs')
     
     def test_complex(self):
         
@@ -27,7 +32,7 @@ command=/usr/bin/eggs
         with sc.group('mygroup', priority=999):
             with sc.options(priority=998):
                 sc.program('silly', '{bin}silly')
-                sc.program('walks', '{bin}walks', 
+                sc.program('walks', '{bin}walks {extra}',
                            user='myotheruser', 
                            process_name='%(program_name)s',
                            numprocs=1,
@@ -50,8 +55,9 @@ command=/usr/bin/eggs
                            stderr_events_enabled=False,
                            directory='/path/to/myapp.com',
                            serverurl='AUTO',
-                           autostart=False,
-                           autorestart=False)
+                           autostart=False, 
+                           autorestart=False,
+                           extra_command_formats=dict(extra=1))
             
         actual = sc.write()
         
@@ -70,7 +76,7 @@ user=myuser
 priority=998
 
 [program:walks]
-command=/usr/bin/walks
+command=/usr/bin/walks 1
 user=myotheruser
 process_name=%(program_name)s
 autorestart=false
